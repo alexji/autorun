@@ -12,23 +12,28 @@ from utils import *
 myemail="alexji@mit.edu"
 scriptpath="/home/alexji/autorun"
 gadgetpath="/home/alexji/P-Gadget3"
-CORES_PER_NODE=24
 
 def submit_one_job(outpath,jobname,snap,levelmax,pmgrid,options):
     subfindprog = gadgetpath+"/P-Gadget3sub"
     if options.hsml: subfindprog += 'hsml'
     subfindprog += '_'+str(pmgrid)
+    print subfindprog
     assert os.path.exists(subfindprog), 'Required subfind is not compiled'
     subfindcfg  = scriptpath+"/gadget_files/paramsub_"+levelmax+".txt"
     assert os.path.exists(subfindcfg), 'Required subfind parameter file does not exist'
-    nproc = str(int(options.nnodes)*CORES_PER_NODE)
 
     f = open(outpath+'/'+jobname+'.sbatch','w')
     f.write("#!/bin/sh\n")
     f.write("#SBATCH -J "+jobname+"\n") #jobname
     f.write("#SBATCH -o subfind.o \n") #jobname
     f.write("#SBATCH -e subfind.e \n") #jobname
-    f.write("#SBATCH -p HyperNodes\n") #partition
+    if options.regnodes:
+        f.write("#SBATCH -p RegNodes\n") #partition
+        CORES_PER_NODE=8
+    else:
+        f.write("#SBATCH -p HyperNodes\n") #partition
+        CORES_PER_NODE=24
+    nproc = str(int(options.nnodes)*CORES_PER_NODE)
     f.write("#SBATCH -N "+str(options.nnodes)+"\n") #minimum number of nodes
     f.write("#SBATCH -n "+str(nproc)+"\n") #minimum number of jobs
     f.write("#SBATCH -t "+options.time+"\n") #time
@@ -82,8 +87,9 @@ def obtain_snaplist(outpath,options):
             #print "  SKIP: Snap "+snap+" in "+outpath+" (running/already run/snap not done)"
             return None
 
-def determine_pmgrid(levelmax):
+def determine_pmgrid(levelmax,options):
     ## I put this here so there's some flexiblity in how to determine pmgrid
+    if options.pmgrid != -1: return options.pmgrid
     if (int(levelmax)==14): return str(512)
     return str(512)
 
@@ -112,7 +118,7 @@ def submit_jobs(outpath,options,jobnum):
             levelmax = lxparam[2:]
         else:
             levelmax = str(options.lxparam)
-        pmgrid = determine_pmgrid(levelmax)
+        pmgrid = determine_pmgrid(levelmax,options)
         shortname = get_short_name(foldername)
         jobname = 'SUBF_'+shortname+'_'+snap
         if (options.checkflag):
@@ -137,6 +143,9 @@ if __name__=="__main__":
     parser.add_option("--nv",
                       action="store",type="string",default="4",
                       help="comma separated list of NV values (default 4)")
+    parser.add_option("--RegNodes",
+                      action="store_true",dest="regnodes",default=False,
+                      help="submit to RegNodes instead of HyperNodes")
     parser.add_option("-s","--snap", 
                       action="store",type="int",dest="snapnum",default=-1,
                       help="specific snap number")
@@ -155,6 +164,9 @@ if __name__=="__main__":
     parser.add_option("--lxparam",
                       action="store",type="int",dest="lxparam",default=-1,
                       help="Set lxparam when folder name is not default format (also determines pmgrid)")
+    parser.add_option("--pmgrid",
+                      action="store",type="int",dest="pmgrid",default=-1,
+                      help="Set pmgrid")
     parser.add_option("--hsml",
                       action="store_true",dest="hsml",default=False,
                       help="use sorted HSML")
@@ -163,7 +175,7 @@ if __name__=="__main__":
     if (options.autoflag):
         # Generate list of paths to halos that have not been run yet
         # For each path in the pathlist, submit a job
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=True)
+        halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         jobnum = 0
         for outpath in halopathlist:
             jobnum = submit_jobs(outpath,options,jobnum)

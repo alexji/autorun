@@ -61,6 +61,8 @@ def write_slurm_submission_script(outpath,jobname,rockstarcfg,options):
     f.write("#SBATCH -e rockstar.e \n") #jobname
     if options.regnodes: #partition
         f.write("#SBATCH -p RegNodes\n")
+    elif options.amd64:
+        f.write("#SBATCH -p AMD64\n")
     else:
         f.write("#SBATCH -p HyperNodes\n")
     f.write("#SBATCH -N "+options.nnodes+"\n") #minimum number of nodes
@@ -168,6 +170,9 @@ if __name__=="__main__":
     parser.add_option("--RegNodes",
                       action="store_true",dest="regnodes",default=False,
                       help="submit to RegNodes instead of HyperNodes")
+    parser.add_option("--AMD64",
+                      action="store_true",dest="amd64",default=False,
+                      help="submit to AMD64 instead of HyperNodes")
     parser.add_option("--lx",
                       action="store",type="string",default="11",
                       help="comma separated list of LX values (default 11)")
@@ -211,7 +216,7 @@ if __name__=="__main__":
         #outpath="/bigbang/data/AnnaGroup/caterpillar/H121869_BB_Z127_P7_LN7_LX12_O4_NV3"
         #submit_one_job(outpath,options,None)
 
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=True)
+        halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         print "Total number of halo paths: ",len(halopathlist)
         #print [os.path.basename(os.path.normpath(outpath)) for outpath in halopathlist]
         currentjobs = get_currently_running_jobs()

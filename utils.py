@@ -86,7 +86,38 @@ def get_currently_running_jobs(verbose=False):
     for line in f:
         currentjobs.append(line.strip())
     f.close()
-    print "Current Jobs from user "+username+": ("+str(len(currentjobs))+" jobs)"
     if verbose:
+        print "Current Jobs from user "+username+": ("+str(len(currentjobs))+" jobs)"
         print currentjobs
     return currentjobs
+
+def get_numsnaps(outpath):
+    return sum(1 for line in open(outpath+'/ExpansionList'))
+
+def get_foldername(outpath):
+    return os.path.basename(os.path.normpath(outpath))
+
+def get_parent_hid(outpath):
+    hidstr = get_foldername(outpath).split('_')[0]
+    return int(hidstr[1:])
+
+def get_zoom_params(outpath):
+    """ return ictype, LX, NV """
+    split = get_foldername(outpath).split('_')
+    return split[1],int(split[5][2:]),int(split[7][2:])
+
+def check_last_subfind_exists(outpath):
+    numsnaps = get_numsnaps(outpath)
+    lastsnap = numsnaps - 1; snapstr = str(lastsnap).zfill(3)
+    group_tab = os.path.exists(outpath+'/outputs/groups_'+snapstr+'/group_tab_'+snapstr+'.0')
+    subhalo_tab = os.path.exists(outpath+'/outputs/groups_'+snapstr+'/subhalo_tab_'+snapstr+'.0')
+    return group_tab and subhalo_tab
+
+def check_last_rockstar_exists(outpath,particles=False):
+    numsnaps = get_numsnaps(outpath)
+    lastsnap = numsnaps - 1; snapstr = str(lastsnap)
+    halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.bin')
+    if not particles:
+        return halo_exists
+    part_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.particles')
+    return halo_exists and part_exists
