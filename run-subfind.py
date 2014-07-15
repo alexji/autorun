@@ -30,6 +30,9 @@ def submit_one_job(outpath,jobname,snap,levelmax,pmgrid,options):
     if options.regnodes:
         f.write("#SBATCH -p RegNodes\n") #partition
         CORES_PER_NODE=8
+    elif options.amd64:
+        f.write("#SBATCH -p AMD64\n") #partition
+        CORES_PER_NODE=64
     else:
         f.write("#SBATCH -p HyperNodes\n") #partition
         CORES_PER_NODE=24
@@ -146,6 +149,9 @@ if __name__=="__main__":
     parser.add_option("--RegNodes",
                       action="store_true",dest="regnodes",default=False,
                       help="submit to RegNodes instead of HyperNodes")
+    parser.add_option("--AMD64",
+                      action="store_true",dest="amd64",default=False,
+                      help="submit to AMD64 instead of HyperNodes")
     parser.add_option("-s","--snap", 
                       action="store",type="int",dest="snapnum",default=-1,
                       help="specific snap number")
@@ -170,12 +176,18 @@ if __name__=="__main__":
     parser.add_option("--hsml",
                       action="store_true",dest="hsml",default=False,
                       help="use sorted HSML")
+    parser.add_option("--oldhalos",
+                      action='store_true',dest='oldhalos',default=False)
 
     (options,args) = parser.parse_args()
     if (options.autoflag):
         # Generate list of paths to halos that have not been run yet
         # For each path in the pathlist, submit a job
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+        if options.oldhalos: 
+            halopathlist = find_halo_paths(options.lx,options.nv,
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False)
+        else:
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         jobnum = 0
         for outpath in halopathlist:
             jobnum = submit_jobs(outpath,options,jobnum)

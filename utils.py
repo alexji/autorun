@@ -21,7 +21,7 @@ def find_halo_paths(lx,nv,
                     checkallexist=False,
                     basepath="/bigbang/data/AnnaGroup/caterpillar/halos",
                     #nrvirlist=global_nrvirlist,levellist=global_levellist,
-                    verbose=True):
+                    verbose=True,hdf5=True):
     """
     Returns a list of paths to halos that have gadget completed/rsynced 
     with the specified nrvirlist and levellist
@@ -32,7 +32,7 @@ def find_halo_paths(lx,nv,
     if verbose:
         print "nrvirlist",nrvirlist
         print "levellist",levellist
-    def gadget_finished(outpath,hdf5=True):
+    def gadget_finished(outpath,hdf5=hdf5):
         numsnaps = sum(1 for line in open(outpath+'/ExpansionList'))
         gadgetpath = outpath+'/outputs'
         if (not os.path.exists(gadgetpath)):

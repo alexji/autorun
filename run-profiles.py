@@ -14,14 +14,14 @@ def submit_job(outpath,options):
     hasstufftorun = False
     runarg = outpath
     for i,profdat in enumerate(allprofdat):
-        if checkfnarr[i](outpath) and (not os.path.exists(outpath+'/'+profdat)):
+        if options.forceflag or (checkfnarr[i](outpath) and (not os.path.exists(outpath+'/'+profdat))):
             runarg += ' '+str(i)
             hasstufftorun = True
             print "RUN: "+outpath+"/"+profdat
     if not hasstufftorun:
         if options.verbose:
             print "DONE: "+outpath
-        return
+        return False
 
     jobname = get_short_name(get_foldername(outpath))
     f = open(outpath+'/profile.sbatch','w')
@@ -48,7 +48,7 @@ def submit_job(outpath,options):
         subprocess.call(';'.join(["cd "+outpath,
                                   "sbatch profile.sbatch"]),
                         shell=True)
-
+    return True
     
 
 if __name__=="__main__":
@@ -82,8 +82,8 @@ if __name__=="__main__":
         halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         n = 0
         for outpath in halopathlist:
-            submit_job(outpath,options)
-            n += 1
+            jobsubmitted = submit_job(outpath,options)
+            if jobsubmitted: n += 1
             if n>=options.numjobs: 
                 print "reached %i jobs (max jobs specified by -n)" % n
                 break
