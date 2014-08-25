@@ -2,12 +2,15 @@ import sys
 import os
 import subprocess
 import glob
-
+import h5py
+import readsnapshots.readsnapHDF5_greg as rs
 username = "alexji"
 scriptpath = "/home/alexji/autorun"
-global_ictype="BB"
+#global_ictype="BB"
 #global_nrvirlist=[3,4,5,6]
 #global_levellist=[11,12,13]
+
+import findhalos.haloutils as haloutils
 
 def get_short_name(filename):
     fileparts =  filename.split("_")
@@ -18,6 +21,7 @@ def get_short_name(filename):
     return haloid+ictype+"LX"+levelmax+"NV"+nrvir
 
 def find_halo_paths(lx,nv,
+                    ictype="BB",
                     checkallexist=False,
                     basepath="/bigbang/data/AnnaGroup/caterpillar/halos",
                     #nrvirlist=global_nrvirlist,levellist=global_levellist,
@@ -32,6 +36,7 @@ def find_halo_paths(lx,nv,
     if verbose:
         print "nrvirlist",nrvirlist
         print "levellist",levellist
+
     def gadget_finished(outpath,hdf5=hdf5):
         numsnaps = sum(1 for line in open(outpath+'/ExpansionList'))
         gadgetpath = outpath+'/outputs'
@@ -70,7 +75,7 @@ def find_halo_paths(lx,nv,
                 levelmax = float(fileparts[5][2:4])
                 nrvir = fileparts[7][-1]
                 haloid = fileparts[0]
-                if (int(levelmax) in levellist and int(nrvir) in nrvirlist and fileparts[1]==global_ictype):
+                if (int(levelmax) in levellist and int(nrvir) in nrvirlist and fileparts[1]==ictype):
                     outpath = basepath+"/"+haloid+"/"+filename
                     if gadget_finished(outpath):
                         halopathlist.append(outpath)
@@ -113,11 +118,26 @@ def check_last_subfind_exists(outpath):
     subhalo_tab = os.path.exists(outpath+'/outputs/groups_'+snapstr+'/subhalo_tab_'+snapstr+'.0')
     return group_tab and subhalo_tab
 
-def check_last_rockstar_exists(outpath,particles=False):
+def check_last_rockstar_exists(outpath,fullbin=True,particles=False):
     numsnaps = get_numsnaps(outpath)
     lastsnap = numsnaps - 1; snapstr = str(lastsnap)
-    halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.bin')
+    if fullbin:
+        halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.fullbin')
+    else:
+        halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.bin')
     if not particles:
         return halo_exists
     part_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.particles')
     return halo_exists and part_exists
+
+def check_is_sorted(outpath,snap=0,hdf5=True):
+    #TODO: option to check all snaps
+    snap = str(snap).zfill(3)
+    filename = outpath+'/outputs/snapdir_'+snap+'/snap_'+snap+'.0'
+    if hdf5: filename += '.hdf5'
+    h = rs.snapshot_header(filename)
+    try:
+        if h.sorted=='yes': return True
+    except:
+        return False
+

@@ -178,6 +178,7 @@ if __name__=="__main__":
                       help="use sorted HSML")
     parser.add_option("--oldhalos",
                       action='store_true',dest='oldhalos',default=False)
+    parser.add_option("--badics",action="store_true",dest="badics",default=False)
 
     (options,args) = parser.parse_args()
     if (options.autoflag):
@@ -186,6 +187,9 @@ if __name__=="__main__":
         if options.oldhalos: 
             halopathlist = find_halo_paths(options.lx,options.nv,
                                            basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False)
+        elif options.badics:
+            halopathlist = find_halo_paths(options.lx,options.nv,
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True)
         else:
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         jobnum = 0

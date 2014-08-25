@@ -37,10 +37,10 @@ cd $outdir
 ##snap=0
 ##while [ $snap -le $lastsnap ]; do
 for ((snap=0;snap<=$lastsnap;++snap)); do
-    for ((writer=0;writer<=$lastwriter;++writer)); do
+    #for ((writer=0;writer<=$lastwriter;++writer)); do
 	#echo "halos_${snap}.${writer}.bin"
-	ln -s halos_$snap/halos_$snap.$writer.bin halos_$snap.$writer.bin
-    done
+	#ln -s halos_$snap/halos_$snap.$writer.bin halos_$snap.$writer.bin
+    #done
     ln -s halos_$snap/out_$snap.list out_$snap.list
     #(( snap++ ))
 done
@@ -53,8 +53,8 @@ perl do_merger_tree.pl $outdir/outputs/merger_tree.cfg
 echo "Removing symbolic links"
 cd $outdir
 for ((snap=0;snap<=$lastsnap;++snap)); do
-    for ((writer=0;writer<=$lastwriter;++writer)); do
-	rm halos_$snap.$writer.bin
-    done
+    #for ((writer=0;writer<=$lastwriter;++writer)); do
+	#rm halos_$snap.$writer.bin
+    #done
     rm out_$snap.list
 done

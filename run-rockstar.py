@@ -35,14 +35,23 @@ def generate_rockstar_cfg(f,outpath,jobname,startsnap,options):
 
     f.write("OUTPUT_FORMAT=\"BINARY\"\n")
     f.write("PARALLEL_IO = 1\n")
-    f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>.hdf5\n")
     f.write("FORK_READERS_FROM_WRITERS = 1\n")
-    f.write("FILE_FORMAT = \"AREPO\"\n") #hdf5 <=> arepo
-    f.write("AREPO_LENGTH_CONVERSION = 1.0\n") #hdf5 <=> arepo
+    if options.oldhalos:
+        f.write("FILE_FORMAT = \"GADGET2\"\n")
+        f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>\n")
+    else:
+        f.write("FILE_FORMAT = \"AREPO\"\n") #hdf5 <=> arepo
+        f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>.hdf5\n")
+        f.write("AREPO_LENGTH_CONVERSION = 1.0\n") #hdf5 <=> arepo
+
     f.write("MASS_DEFINITION=\"vir\"\n")
     #if (options.allhaloparticlesflag):
     #    f.write("FULL_PARTICLE_CHUNKS = ${NCORES}\n")
     #    f.write("OUTPUT_ALL_HALO_PARTICLES_ALEX = 1\n")
+
+    f.write("FULL_PARTICLE_BINARY = "+options.numwriters+"\n")
+    f.write("DELETE_BINARY_OUTPUT_AFTER_FINISHED = 1\n")
+    
     f.write("EOF\n\n")
 
     return filename
@@ -86,11 +95,17 @@ def write_slurm_submission_script(outpath,jobname,rockstarcfg,options):
     f.write("cd "+outpath+"\n")
 
     if options.autoflag:
+        if options.forceflag:
+            f.write("if [ -d halos ]; then \n")
+            f.write("    rm -rf halos\n")
+            f.write("fi\n\n")
         f.write("mkdir -p halos\n")
-        f.write("chgrp annaproj halos\n")
+        f.write('chmod -R g+rwx halos\n')
+        f.write("chgrp -R annaproj halos\n")
         f.write("cd halos\n")
         rockstarcfg = generate_rockstar_cfg(f,outpath,jobname,startsnap,options)
-        outpath = outpath+'/halos'
+        halopath = outpath+'/halos'
+    else: halopath = outpath
 
     f.write("if [ -e auto-rockstar.cfg ]; then\n")
     f.write("    rm auto-rockstar.cfg\n")
@@ -109,7 +124,10 @@ def write_slurm_submission_script(outpath,jobname,rockstarcfg,options):
     f.write('echo "halo catalogue stop time" `/bin/date`\n')
     ## postprocess rockstar: run merger tree, create folders
     f.write(scriptpath+"/postprocess-rockstar.sh "+rockstarpath+" "
-            +rockstarcfg+" "+mergertreepath+" "+outpath+" $NUMSNAPS "+startsnap+" $BOXSIZE\n")
+            +rockstarcfg+" "+mergertreepath+" "+halopath+" $NUMSNAPS "+startsnap+" $BOXSIZE\n")
+    f.write("cd "+outpath+"\n")
+    f.write("chgrp -R annaproj halos\n")
+    f.write("chmod -R g+rwx halos\n")
 
     f.write('echo "stop time" `/bin/date`\n')
     f.close()
@@ -207,6 +225,8 @@ if __name__=="__main__":
     #parser.add_option("--allhaloparticles",
     #                  action="store_true",dest="allhaloparticlesflag",default=False,
     #                  help="flag to output every particle for every halo (having more cores should make tihs faster)")
+    parser.add_option("--oldhalos",action="store_true",dest="oldhalos",default=False)
+    parser.add_option("--badics",action="store_true",dest="badics",default=False)
 
     (options,args) = parser.parse_args()
 
@@ -216,7 +236,14 @@ if __name__=="__main__":
         #outpath="/bigbang/data/AnnaGroup/caterpillar/H121869_BB_Z127_P7_LN7_LX12_O4_NV3"
         #submit_one_job(outpath,options,None)
 
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+        if options.oldhalos:
+            print "looking in oldhalos"
+            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False)
+        elif options.badics:
+            print "looking in extremely_large_ics"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics")
+        else:
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
         print "Total number of halo paths: ",len(halopathlist)
         #print [os.path.basename(os.path.normpath(outpath)) for outpath in halopathlist]
         currentjobs = get_currently_running_jobs()
@@ -244,7 +271,7 @@ if __name__=="__main__":
             numsnaps = 0
             for snap in xrange(totalnumsnaps):
                 snapstr = str(snap)
-                if os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.bin'):
+                if os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.fullbin'):
                     numsnaps += 1
             if numsnaps == totalnumsnaps and not options.forceflag:
                 print "DONE Rockstar completed for "+os.path.basename(os.path.normpath(outpath))+", "+str(numsnaps)+" snaps"
