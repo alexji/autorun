@@ -88,25 +88,7 @@ def auto_split_snaps(numsnaps,nnodes):
     return output
 
 if __name__=="__main__":
-    parser = OptionParser()
-    parser.add_option("-a","--auto", 
-                      action="store_true",dest="autoflag",default=False,
-                      help="automatically search through directories and submit jobs")
-    parser.add_option("-k","--check",
-                      action="store_true",dest="checkflag",default=False,
-                      help="check to see what jobs would be run without actually running them")
-    parser.add_option("--RegNodes",
-                      action="store_true",dest="regnodes",default=False,
-                      help="submit to RegNodes instead of HyperNodes")
-    parser.add_option("--AMD64",
-                      action="store_true",dest="amd64",default=False,
-                      help="submit to AMD64 instead of HyperNodes")
-    parser.add_option("--lx",
-                      action="store",type="string",default="11",
-                      help="comma separated list of LX values (default 11)")
-    parser.add_option("--nv",
-                      action="store",type="string",default="4",
-                      help="comma separated list of NV values (default 4)")
+    parser = get_default_parser()
     parser.add_option("-n","--num-jobs",
                       action="store",type="int",dest="numjobs",default=1,
                       help="number of jobs to submit")

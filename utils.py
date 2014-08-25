@@ -3,6 +3,7 @@ import os
 import subprocess
 import glob
 import h5py
+from optparse import OptionParser
 import readsnapshots.readsnapHDF5_greg as rs
 username = "alexji"
 scriptpath = "/home/alexji/autorun"
@@ -22,6 +23,7 @@ def get_short_name(filename):
 
 def find_halo_paths(lx,nv,
                     ictype="BB",
+                    require_sorted=False,
                     checkallexist=False,
                     basepath="/bigbang/data/AnnaGroup/caterpillar/halos",
                     #nrvirlist=global_nrvirlist,levellist=global_levellist,
@@ -37,51 +39,11 @@ def find_halo_paths(lx,nv,
         print "nrvirlist",nrvirlist
         print "levellist",levellist
 
-    def gadget_finished(outpath,hdf5=hdf5):
-        numsnaps = sum(1 for line in open(outpath+'/ExpansionList'))
-        gadgetpath = outpath+'/outputs'
-        if (not os.path.exists(gadgetpath)):
-            if verbose: print "Gadget not run on "+outpath
-            return False
-        for snap in xrange(numsnaps): # check that all snaps are there
-            snapstr = str(snap).zfill(3)
-            #check for existence of block 0
-            snapfile = gadgetpath+"/snapdir_"+snapstr+"/snap_"+snapstr+".0"
-            if hdf5:
-                snapfile += ".hdf5"
-            if (not os.path.isfile(snapfile)):
-                if verbose: print "Snap "+snapstr+" not in "+outpath
-                return False
-            #check all blocks are valid
-            if checkallexist:
-                for snapfile in glob.glob(gadgetpath+"/snapdir_"+snapstr+'/*'):
-                    if (os.path.getsize(snapfile) <= 0):
-                        if verbose: print snapfile,"has no data (skipping)"#"Snap "+snapstr+" missing valid block in "+outpath
-                        return False
-        return True
-
-    halopathlist = []
-    haloidlist = []
-    for filename in os.listdir(basepath):
-        if filename[0] == "H":
-            haloidlist.append(filename)
-    for i,haloid in enumerate(haloidlist):
-        subdirnames = basepath + "/" + haloid
-        halosubdirlist = []
-        try:
-            for filename in os.listdir(subdirnames):
-                halosubdirlist.append(filename)
-                fileparts =  filename.split("_")
-                levelmax = float(fileparts[5][2:4])
-                nrvir = fileparts[7][-1]
-                haloid = fileparts[0]
-                if (int(levelmax) in levellist and int(nrvir) in nrvirlist and fileparts[1]==ictype):
-                    outpath = basepath+"/"+haloid+"/"+filename
-                    if gadget_finished(outpath):
-                        halopathlist.append(outpath)
-        except:
-            continue
-    return halopathlist
+    return haloutils.find_halo_paths(basepath=basepath,
+                                     nrvirlist=nrvirlist,levellist=levellist,
+                                     ictype=ictype,verbose=verbose,hdf5=hdf5,
+                                     checkallblocks=checkallexist,
+                                     require_sorted=require_sorted)
 
 def get_currently_running_jobs(verbose=False):
     subprocess.call("squeue -h -u "+username+" -o '%j' > "+scriptpath+"/.CURRENTQUEUE",
@@ -97,47 +59,39 @@ def get_currently_running_jobs(verbose=False):
     return currentjobs
 
 def get_numsnaps(outpath):
-    return sum(1 for line in open(outpath+'/ExpansionList'))
-
+    return haloutils.get_numsnaps(outpath)
 def get_foldername(outpath):
-    return os.path.basename(os.path.normpath(outpath))
-
+    return haloutils.get_foldername(outpath)
 def get_parent_hid(outpath):
-    hidstr = get_foldername(outpath).split('_')[0]
-    return int(hidstr[1:])
-
+    return haloutils.get_parent_hid(outpath)
 def get_zoom_params(outpath):
-    """ return ictype, LX, NV """
-    split = get_foldername(outpath).split('_')
-    return split[1],int(split[5][2:]),int(split[7][2:])
-
+    return haloutils.get_zoom_params(outpath)
 def check_last_subfind_exists(outpath):
-    numsnaps = get_numsnaps(outpath)
-    lastsnap = numsnaps - 1; snapstr = str(lastsnap).zfill(3)
-    group_tab = os.path.exists(outpath+'/outputs/groups_'+snapstr+'/group_tab_'+snapstr+'.0')
-    subhalo_tab = os.path.exists(outpath+'/outputs/groups_'+snapstr+'/subhalo_tab_'+snapstr+'.0')
-    return group_tab and subhalo_tab
-
+    return haloutils.check_last_subfind_exists(outpath)
 def check_last_rockstar_exists(outpath,fullbin=True,particles=False):
-    numsnaps = get_numsnaps(outpath)
-    lastsnap = numsnaps - 1; snapstr = str(lastsnap)
-    if fullbin:
-        halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.fullbin')
-    else:
-        halo_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.bin')
-    if not particles:
-        return halo_exists
-    part_exists = os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.particles')
-    return halo_exists and part_exists
-
+    return haloutils.check_last_rockstar_exists(outpath,fullbin=fullbin,particles=particles)
 def check_is_sorted(outpath,snap=0,hdf5=True):
-    #TODO: option to check all snaps
-    snap = str(snap).zfill(3)
-    filename = outpath+'/outputs/snapdir_'+snap+'/snap_'+snap+'.0'
-    if hdf5: filename += '.hdf5'
-    h = rs.snapshot_header(filename)
-    try:
-        if h.sorted=='yes': return True
-    except:
-        return False
+    return haloutils.check_is_sorted(outpath,snap=snap,hdf5=hdf5)
 
+def get_default_parser():
+    parser = OptionParser()
+    parser.add_option("-a","--auto",action="store_true",dest="autoflag",default=False,
+                      help="automatically search through caterpillar directories")
+    parser.add_option("-k","--check",
+                      action="store_true",dest="checkflag",default=False,
+                      help="check to see what jobs would be run without actually running them (writes submission scripts)")
+    parser.add_option("--RegNodes",
+                      action="store_true",dest="regnodes",default=False,
+                      help="submit to RegNodes instead of HyperNodes")
+    parser.add_option("--AMD64",
+                      action="store_true",dest="amd64",default=False,
+                      help="submit to AMD64 instead of HyperNodes")
+    parser.add_option("--lx",
+                      action="store",type="string",default="11",
+                      help="comma separated list of LX values (default 11)")
+    parser.add_option("--nv",
+                      action="store",type="string",default="4",
+                      help="comma separated list of NV values (default 4)")
+    parser.add_option("--oldhalos",action="store_true",dest="oldhalos",default=False)
+    parser.add_option("--badics",action="store_true",dest="badics",default=False)
+    return parser

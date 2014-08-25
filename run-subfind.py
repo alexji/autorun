@@ -133,25 +133,7 @@ def submit_jobs(outpath,options,jobnum):
     return jobnum
 
 if __name__=="__main__":
-    parser = OptionParser(usage="%prog [-f] [-a] [-s SNAPNUM] [-n NUMJOBS] [-l ARGUMENT_FOR_QSUB] [-c] /directory/of/subfind")
-    parser.add_option("-a","--auto", 
-                      action="store_true",dest="autoflag",default=False,
-                      help="automatically search through directories for jobs to submit (no need to specify subfind directory)")
-    parser.add_option("-k","--check",
-                      action="store_true",dest="checkflag",default=False,
-                      help="check to see what jobs would be run without actually running them")
-    parser.add_option("--lx",
-                      action="store",type="string",default="11",
-                      help="comma separated list of LX values (default 11)")
-    parser.add_option("--nv",
-                      action="store",type="string",default="4",
-                      help="comma separated list of NV values (default 4)")
-    parser.add_option("--RegNodes",
-                      action="store_true",dest="regnodes",default=False,
-                      help="submit to RegNodes instead of HyperNodes")
-    parser.add_option("--AMD64",
-                      action="store_true",dest="amd64",default=False,
-                      help="submit to AMD64 instead of HyperNodes")
+    parser = get_default_parser()
     parser.add_option("-s","--snap", 
                       action="store",type="int",dest="snapnum",default=-1,
                       help="specific snap number")
@@ -176,9 +158,6 @@ if __name__=="__main__":
     parser.add_option("--hsml",
                       action="store_true",dest="hsml",default=False,
                       help="use sorted HSML")
-    parser.add_option("--oldhalos",
-                      action='store_true',dest='oldhalos',default=False)
-    parser.add_option("--badics",action="store_true",dest="badics",default=False)
 
     (options,args) = parser.parse_args()
     if (options.autoflag):
@@ -186,12 +165,15 @@ if __name__=="__main__":
         # For each path in the pathlist, submit a job
         if options.oldhalos: 
             halopathlist = find_halo_paths(options.lx,options.nv,
-                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False)
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False,
+                                           require_sorted=True)
         elif options.badics:
             halopathlist = find_halo_paths(options.lx,options.nv,
-                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True)
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True,
+                                           require_sorted=True)
         else:
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,
+                                           require_sorted=True)
         jobnum = 0
         for outpath in halopathlist:
             jobnum = submit_jobs(outpath,options,jobnum)

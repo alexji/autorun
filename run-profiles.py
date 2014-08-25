@@ -52,27 +52,12 @@ def submit_job(outpath,options):
     
 
 if __name__=="__main__":
-    parser = OptionParser()
-    parser.add_option("-a","--auto", 
-                      action="store_true",dest="autoflag",default=False,
-                      help="automatically search through directories for jobs to submit")
-    parser.add_option("-k","--check",
-                      action="store_true",dest="checkflag",default=False,
-                      help="check to see what jobs would be run without actually running them")
+    parser = get_default_parser()
     parser.add_option('-f',action='store_true',dest='forceflag',default=False,
                       help="forced to recompute potentials if already calculated")
     parser.add_option("-n","--num-jobs",
                       action="store",type="int",dest="numjobs",default=1,
                       help="number of jobs to submit (one per halo)")
-    parser.add_option("--lx",
-                      action="store",type="string",default="11",
-                      help="comma separated list of LX values (default 11)")
-    parser.add_option("--nv",
-                      action="store",type="string",default="4",
-                      help="comma separated list of NV values (default 4)")
-    parser.add_option("--RegNodes",
-                      action="store_true",dest="regnodes",default=False,
-                      help="submit to RegNodes instead of HyperNodes")
     parser.add_option("-v","--verbose",
                       action="store_true",dest="verbose",default=False,
                       help="print out more info")

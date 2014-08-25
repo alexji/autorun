@@ -175,28 +175,10 @@ def get_rockstar_outbase(filename):
     #in the future: could just use current directory, which I think is the rockstar default
 
 if __name__=="__main__":
-    parser = OptionParser(usage="%prog [-f] [-a] [-s STARTSNAP] [-n NUMJOBS] [-l ARGUMENT_FOR_QSUB] [-k] /path/to/rockstar/config/file")
+    parser = get_default_parser()
     parser.add_option("-f","--force", 
                       action="store_true",dest="forceflag",default=False,
                       help="force rockstar to rerun even if already run (as determined by the existence of a halos/ folder). Be careful with the --auto option! It's better to delete the relevant halos/ folders if you want to redo something with --auto")
-    parser.add_option("-a","--auto", 
-                      action="store_true",dest="autoflag",default=False,
-                      help="automatically search through directories, create config files and submit jobs")
-    parser.add_option("-k","--check",
-                      action="store_true",dest="checkflag",default=False,
-                      help="check to see what jobs would be run without actually running them")
-    parser.add_option("--RegNodes",
-                      action="store_true",dest="regnodes",default=False,
-                      help="submit to RegNodes instead of HyperNodes")
-    parser.add_option("--AMD64",
-                      action="store_true",dest="amd64",default=False,
-                      help="submit to AMD64 instead of HyperNodes")
-    parser.add_option("--lx",
-                      action="store",type="string",default="11",
-                      help="comma separated list of LX values (default 11)")
-    parser.add_option("--nv",
-                      action="store",type="string",default="4",
-                      help="comma separated list of NV values (default 4)")
     parser.add_option("-s","--startsnap",
                       action="store",type="int",dest="startsnap",default=0,
                       help="if -a option is specified, this gives the first snap number to begin running rockstar (default 0)")
@@ -209,10 +191,6 @@ if __name__=="__main__":
     parser.add_option("-t","--time",
                       action="store",type="string",dest="time",default="infinite",
                       help="argument to sbatch --time (-t) (default infinite)")
-    ## TODO
-    #parser.add_option("--mem",
-    #                  action="store",type="string",dest="mem",default="24gb",
-    #                  help="SLURM SBATCH memory request (default 24gb)")
     parser.add_option("--autostartsnap",
                       action="store_true",dest="autostartsnap",default=False,
                       help="if specified, automatically detects the snap to start rockstar (overwrites what you put for --startsnap)")
@@ -225,37 +203,24 @@ if __name__=="__main__":
     #parser.add_option("--allhaloparticles",
     #                  action="store_true",dest="allhaloparticlesflag",default=False,
     #                  help="flag to output every particle for every halo (having more cores should make tihs faster)")
-    parser.add_option("--oldhalos",action="store_true",dest="oldhalos",default=False)
-    parser.add_option("--badics",action="store_true",dest="badics",default=False)
 
     (options,args) = parser.parse_args()
 
     if (options.autoflag):
-        # Generate list of paths to halos that have not been run yet
-        # For each path in the pathlist, submit a job (automatically generates a config file)
-        #outpath="/bigbang/data/AnnaGroup/caterpillar/H121869_BB_Z127_P7_LN7_LX12_O4_NV3"
-        #submit_one_job(outpath,options,None)
-
         if options.oldhalos:
             print "looking in oldhalos"
-            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False)
+            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False,
+                                           require_sorted=True)
         elif options.badics:
             print "looking in extremely_large_ics"
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics")
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",
+                                           require_sorted=True)
         else:
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,
+                                           require_sorted=True)
         print "Total number of halo paths: ",len(halopathlist)
         #print [os.path.basename(os.path.normpath(outpath)) for outpath in halopathlist]
         currentjobs = get_currently_running_jobs()
-        #subprocess.call("qstat -f | grep 'Job_Name' > "+scriptpath+"/.CURRENTQUEUE",
-        #                shell=True)
-        #currentjobs = []
-        #f = open(scriptpath+'/.CURRENTQUEUE')
-        #for line in f:
-        #    currentjobs.append((line.split("=")[1]).strip())
-        #f.close()
-        #print "Current Jobs: ("+str(len(currentjobs))+" jobs)"
-        #print currentjobs
 
         listtosubmit = list(halopathlist) #copy halopathlist
         for outpath in halopathlist:
