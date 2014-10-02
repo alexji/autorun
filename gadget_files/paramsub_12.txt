@@ -21,7 +21,7 @@ ResubmitOn        0
 ResubmitCommand   my-scriptfile
 
 %----- Memory alloction
-MaxMemSize        3000      % sets maximum memory use in MByte
+MaxMemSize        1900      % sets maximum memory use in MByte
 PartAllocFactor   2.0 
 BufferSize        100       % in MByte
 
@@ -47,7 +47,7 @@ OutputListOn              1
 TimeBetSnapshot           0.0
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         0.01
-NumFilesPerSnapshot       64 
+NumFilesPerSnapshot       8
 NumFilesWrittenInParallel 8
 
 %---- Accuracy of time integration
@@ -86,18 +86,18 @@ GravityConstantInternal  0
 MinGasHsmlFractional 0.25
 
 SofteningGas	0
-SofteningHalo	0.001953125
-SofteningDisk	0.0078125
-SofteningBulge	0.015625
-SofteningStars	0.0625
-SofteningBndry	0.125
+SofteningHalo	0.000305175
+SofteningDisk	0.001220703
+SofteningBulge	0.002441406
+SofteningStars	0.00976563
+SofteningBndry	0.0195313
 	
 SofteningGasMaxPhys	0
-SofteningHaloMaxPhys	0.000610352
-SofteningDiskMaxPhys	0.002441406
-SofteningBulgeMaxPhys	0.004882813
-SofteningStarsMaxPhys	0.01953125
-SofteningBndryMaxPhys	0.0390625
+SofteningHaloMaxPhys	0.000305175
+SofteningDiskMaxPhys	0.001220703
+SofteningBulgeMaxPhys	0.002441406
+SofteningStarsMaxPhys	0.00976563
+SofteningBndryMaxPhys	0.0195313
 
 %non-common
 ArtBulkViscConst    1.0

@@ -21,7 +21,7 @@ ResubmitOn        0
 ResubmitCommand   my-scriptfile
 
 %----- Memory alloction
-MaxMemSize        3300      % sets maximum memory use in MByte
+MaxMemSize        3800      % sets maximum memory use in MByte
 PartAllocFactor   2.0 
 BufferSize        100       % in MByte
 
@@ -86,18 +86,18 @@ GravityConstantInternal  0
 MinGasHsmlFractional 0.25
 
 SofteningGas	0
-SofteningHalo	0.000305176
-SofteningDisk	0.001220703
-SofteningBulge	0.002441406
-SofteningStars	0.009765625
-SofteningBndry	0.01953125
-	
+SofteningHalo	0.00015258789
+SofteningDisk	0.00061035156
+SofteningBulge	0.00122070313
+SofteningStars	0.00488281
+SofteningBndry	0.00976563
+
 SofteningGasMaxPhys	0
-SofteningHaloMaxPhys	0.000305176
-SofteningDiskMaxPhys	0.001220703
-SofteningBulgeMaxPhys	0.002441406
-SofteningStarsMaxPhys	0.009765625
-SofteningBndryMaxPhys	0.01953125
+SofteningHaloMaxPhys	0.00015258789
+SofteningDiskMaxPhys	0.00061035156
+SofteningBulgeMaxPhys	0.00122070313
+SofteningStarsMaxPhys	0.00488281
+SofteningBndryMaxPhys	0.00976563
 
 %non-common
 ArtBulkViscConst    1.0

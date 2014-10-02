@@ -15,9 +15,29 @@ scriptpath="/home/alexji/autorun"
 rockstarpath="/home/alexji/Rockstar-0.99.9-RC3"
 mergertreepath="/home/alexji/consistent_trees-0.99.9.2"
 
-#global_nrvirlist=[4]
-#global_levellist=[12]
-global_ictype="BB"
+def _find_force_res(outpath):
+    fname = outpath+'/param.txt-usedvalues'
+    if not os.path.exists(fname): raise IOError("Could not find file "+fname)
+    forceres=-1
+    f = open(fname,'r')
+    for line in f:
+        s = line.split()
+        if s[0]=="SofteningHaloMaxPhys":
+            forceres = float(s[1])
+            break
+    f.close()
+    if forceres==-1: raise IOError("Could not find force resolution")
+    return forceres
+def find_force_res(outpath):
+    try:
+        forceres = _find_force_res(outpath)
+    except IOError as e:
+        print "------WARNING------"
+        print e
+        ictype,lx,nv = utils.get_zoom_params(outpath)
+        #forceres = 100./2.^lx/40.
+        forceres = 100./2.^lx/80.
+    return forceres
 
 def generate_rockstar_cfg(f,outpath,jobname,startsnap,options):
     ## Automatically generate a cfg file
@@ -36,6 +56,8 @@ def generate_rockstar_cfg(f,outpath,jobname,startsnap,options):
     f.write("OUTPUT_FORMAT=\"BINARY\"\n")
     f.write("PARALLEL_IO = 1\n")
     f.write("FORK_READERS_FROM_WRITERS = 1\n")
+    forceres = find_force_res(outpath)
+    f.write("FORCE_RES = "+str(forceres)+"\n")
     if options.oldhalos:
         f.write("FILE_FORMAT = \"GADGET2\"\n")
         f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>\n")
@@ -45,9 +67,6 @@ def generate_rockstar_cfg(f,outpath,jobname,startsnap,options):
         f.write("AREPO_LENGTH_CONVERSION = 1.0\n") #hdf5 <=> arepo
 
     f.write("MASS_DEFINITION=\"vir\"\n")
-    #if (options.allhaloparticlesflag):
-    #    f.write("FULL_PARTICLE_CHUNKS = ${NCORES}\n")
-    #    f.write("OUTPUT_ALL_HALO_PARTICLES_ALEX = 1\n")
 
     f.write("FULL_PARTICLE_BINARY = "+options.numwriters+"\n")
     f.write("DELETE_BINARY_OUTPUT_AFTER_FINISHED = 1\n")
@@ -200,9 +219,6 @@ if __name__=="__main__":
     parser.add_option("--multimass",
                       action="store_true",dest="multimassflag",default=False,
                       help="flag to set multimass version (you still have to manually set the rockstar path in the source code)")
-    #parser.add_option("--allhaloparticles",
-    #                  action="store_true",dest="allhaloparticlesflag",default=False,
-    #                  help="flag to output every particle for every halo (having more cores should make tihs faster)")
 
     (options,args) = parser.parse_args()
 

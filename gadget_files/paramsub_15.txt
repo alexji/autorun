@@ -1,5 +1,5 @@
 %----  Relevant files
-InitCondFile        ./ics_rewrite
+InitCondFile        ./ics
 OutputDir           ./outputs
 EnergyFile          energy.txt
 InfoFile            info.txt
@@ -48,7 +48,7 @@ TimeBetSnapshot           0.0
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         0.01
 NumFilesPerSnapshot       64 
-NumFilesWrittenInParallel 8
+NumFilesWrittenInParallel 64
 
 %---- Accuracy of time integration
 TypeOfTimestepCriterion  0
@@ -82,19 +82,18 @@ GravityConstantInternal  0
 MinGasHsmlFractional 0.25
 
 SofteningGas		0.0
-SofteningHalo		0.0000762939453
-SofteningDisk  		0.0000381469727
-SofteningBulge		0.0000190734863
-SofteningStars  	0.0000095367432
-SofteningBndry 		0.0000047683716
+SofteningHalo		0.0000381469726563
+SofteningDisk  		0.00015258789
+SofteningBulge		0.00030517578
+SofteningStars  	0.0012207
+SofteningBndry 		0.00244141
 		
 SofteningGasMaxPhys             0.0
-SofteningHaloMaxPhys   		0.0000762939000
-SofteningDiskMaxPhys   		0.0000381470000
-SofteningBulgeMaxPhys  		0.0000190735000
-SofteningStarsMaxPhys  		0.0000095367400
-SofteningBndryMaxPhys  		0.0000047683700
-
+SofteningHaloMaxPhys   		0.0000381469726563
+SofteningDiskMaxPhys   		0.00015258789
+SofteningBulgeMaxPhys  		0.00030517578
+SofteningStarsMaxPhys  		0.0012207
+SofteningBndryMaxPhys  		0.00244141
 
 %non-common
 ArtBulkViscConst    1.0

@@ -47,8 +47,8 @@ OutputListOn              1
 TimeBetSnapshot           0.0
 TimeOfFirstSnapshot       0.0
 TimeBetStatistics         0.01
-NumFilesPerSnapshot       64
-NumFilesWrittenInParallel 8
+NumFilesPerSnapshot       64 
+NumFilesWrittenInParallel 64 
 
 %---- Accuracy of time integration
 TypeOfTimestepCriterion  0
@@ -86,18 +86,18 @@ GravityConstantInternal  0
 MinGasHsmlFractional 0.25
 
 SofteningGas	0
-SofteningHalo	0.000152588
-SofteningDisk	0.000610352
-SofteningBulge	0.001220703
-SofteningStars	0.004882813
-SofteningBndry	0.009765625
+SofteningHalo	0.0000762939453125
+SofteningDisk	0.00030517578
+SofteningBulge	0.00061035156
+SofteningStars	0.00244141
+SofteningBndry	0.00488281
 	
 SofteningGasMaxPhys	0
-SofteningHaloMaxPhys	0.000152588
-SofteningDiskMaxPhys	0.000610352
-SofteningBulgeMaxPhys	0.001220703
-SofteningStarsMaxPhys	0.004882813
-SofteningBndryMaxPhys	0.009765625
+SofteningHaloMaxPhys	0.0000762939453125
+SofteningDiskMaxPhys	0.00030517578
+SofteningBulgeMaxPhys	0.00061035156
+SofteningStarsMaxPhys	0.00244141
+SofteningBndryMaxPhys	0.00488281
 
 %non-common
 ArtBulkViscConst    1.0

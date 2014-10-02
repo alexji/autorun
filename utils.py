@@ -11,7 +11,8 @@ scriptpath = "/home/alexji/autorun"
 #global_nrvirlist=[3,4,5,6]
 #global_levellist=[11,12,13]
 
-import findhalos.haloutils as haloutils
+#caterpillar analysis module
+import haloutils
 
 def get_short_name(filename):
     fileparts =  filename.split("_")
@@ -23,8 +24,11 @@ def get_short_name(filename):
 
 def find_halo_paths(lx,nv,
                     ictype="BB",
+                    contamsuite=False,
                     require_sorted=False,
+                    require_rockstar=False,
                     checkallexist=False,
+                    onlychecklastsnap=False,
                     basepath="/bigbang/data/AnnaGroup/caterpillar/halos",
                     #nrvirlist=global_nrvirlist,levellist=global_levellist,
                     verbose=True,hdf5=True):
@@ -42,8 +46,11 @@ def find_halo_paths(lx,nv,
     return haloutils.find_halo_paths(basepath=basepath,
                                      nrvirlist=nrvirlist,levellist=levellist,
                                      ictype=ictype,verbose=verbose,hdf5=hdf5,
+                                     contamsuite=contamsuite,
                                      checkallblocks=checkallexist,
-                                     require_sorted=require_sorted)
+                                     require_sorted=require_sorted,
+                                     onlychecklastsnap=onlychecklastsnap,
+                                     require_rockstar=require_rockstar)
 
 def get_currently_running_jobs(verbose=False):
     subprocess.call("squeue -h -u "+username+" -o '%j' > "+scriptpath+"/.CURRENTQUEUE",

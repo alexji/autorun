@@ -7,15 +7,19 @@ profprog = "/spacebase/data/alexji/analysis/profiles/compute_all_profiles.py"
 
 def submit_job(outpath,options):
     # Check which profiles to run
-    allprofdat = ['rs-halo-profile.dat','rs-halo-profile-allpart.dat',
-                  'subf-halo-profile.dat','subf-halo-profile-radius.dat']
-    checkfnarr = [check_last_rockstar_exists, check_last_rockstar_exists,
-                  check_last_subfind_exists, check_last_subfind_exists]
+    #allprofdat = ['rs-halo-profile.dat','rs-halo-profile-allpart.dat',
+    #              'subf-halo-profile.dat','subf-halo-profile-radius.dat']
+    #checkfnarr = [check_last_rockstar_exists, check_last_rockstar_exists,
+    #              check_last_subfind_exists, check_last_subfind_exists]
+    #typearr = [0,1,2,3]
+    allprofdat = ['rs-halo-profile-allpart.dat']#,'subf-halo-profile-radius.dat']
+    checkfnarr = [check_last_rockstar_exists]#,check_last_subfind_exists]
+    typearr = [1]#,3]
     hasstufftorun = False
     runarg = outpath
     for i,profdat in enumerate(allprofdat):
         if options.forceflag or (checkfnarr[i](outpath) and (not os.path.exists(outpath+'/'+profdat))):
-            runarg += ' '+str(i)
+            runarg += ' '+str(typearr[i])
             hasstufftorun = True
             print "RUN: "+outpath+"/"+profdat
     if not hasstufftorun:
@@ -64,7 +68,9 @@ if __name__=="__main__":
     options,args = parser.parse_args()
 
     if (options.autoflag):
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+        halopathlist = find_halo_paths(options.lx,options.nv,
+                                       #onlychecklastsnap=True,
+                                       verbose=False)
         n = 0
         for outpath in halopathlist:
             jobsubmitted = submit_job(outpath,options)
