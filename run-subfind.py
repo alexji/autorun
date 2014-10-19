@@ -117,8 +117,8 @@ def submit_jobs(outpath,options,jobnum):
                 sys.exit("Ending script (reached job limit)")
         snap = str(snap).zfill(3)
         if (options.lxparam==-1):
-            haloid,bparam,zparam,pparam,lnparam,lxparam,oparam,nvparam = foldername.split('_')
-            levelmax = lxparam[2:]
+            ictype,levelmax,nrvir = get_zoom_params(outpath)
+            levelmax = str(levelmax)
         else:
             levelmax = str(options.lxparam)
         pmgrid = determine_pmgrid(levelmax,options)
@@ -165,15 +165,15 @@ if __name__=="__main__":
         # For each path in the pathlist, submit a job
         if options.oldhalos: 
             halopathlist = find_halo_paths(options.lx,options.nv,
-                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False,
-                                           require_sorted=True)
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",checkallexist=True,verbose=True,hdf5=False)
+                                           #require_sorted=True)
         elif options.badics:
             halopathlist = find_halo_paths(options.lx,options.nv,
-                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True,
-                                           require_sorted=True)
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True)
+                                           #require_sorted=True)
         else:
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,
-                                           require_sorted=True)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+                                           #require_sorted=True)
         jobnum = 0
         for outpath in halopathlist:
             jobnum = submit_jobs(outpath,options,jobnum)

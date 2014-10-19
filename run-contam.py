@@ -7,7 +7,8 @@ from utils import *
 
 myemail="alexji@mit.edu"
 scriptpath="/home/alexji/autorun"
-rockstarpath="/home/alexji/Rockstar-0.99.9-RC3"
+rockstarpath="/home/alexji/rockstar"
+#rockstarpath="/home/alexji/Rockstar-0.99.9-RC3"
 mergertreepath="/home/alexji/consistent_trees-0.99.9.2"
 gadgetpath="/home/alexji/P-Gadget3"
 
@@ -119,13 +120,13 @@ def submit_one_job(outpath,options):
         split = foldername.split('_')
         jobname = 'HC_'+split[0]+'_'+split[-1]
         write_submission_script(outpath,jobname,options)
+        if not options.checkflag:
+            subprocess.call(';'.join(["cd "+outpath,
+                                      "sbatch "+jobname+".sbatch"]),
+                            shell=True)
     except Exception as e:
-        raise e
+        print e
 
-    if not options.checkflag:
-        subprocess.call(';'.join(["cd "+outpath,
-                                  "sbatch "+jobname+".sbatch"]),
-                        shell=True)
 
 if __name__=="__main__":
     parser = get_default_parser()
@@ -144,10 +145,21 @@ if __name__=="__main__":
     parser.add_option("-N","--nnodes",
                       action="store",type="string",dest="nnodes",default="1",
                       help="argument to sbatch --nnodes (-N) (default 1)")
+    parser.add_option("-v","--verbose",
+                      action="store_true",dest="verbose",default=False,
+                      help="print out all output from find_halo_paths")
     (options,args) = parser.parse_args()
 
     if options.autoflag:
-        halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,contamsuite=True,onlychecklastsnap=True)
+        halopathlist = find_halo_paths(options.lx,options.nv,
+                                       basepath='/bigbang/data/AnnaGroup/caterpillar/halos/low_mass_halos',
+                                       verbose=options.verbose,contamsuite=True,onlychecklastsnap=True)
+        halopathlist += find_halo_paths(options.lx,options.nv,
+                                       basepath='/bigbang/data/AnnaGroup/caterpillar/halos/middle_mass_halos',
+                                       verbose=options.verbose,contamsuite=True,onlychecklastsnap=True)
+        halopathlist += find_halo_paths(options.lx,options.nv,
+                                        basepath='/bigbang/data/AnnaGroup/caterpillar/halos/high_mass_halos',
+                                        verbose=options.verbose,contamsuite=True,onlychecklastsnap=True)
         currentjobs = get_currently_running_jobs()
 
         listtosubmit = list(halopathlist) #copy halopathlist

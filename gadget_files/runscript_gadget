@@ -1,0 +1,17 @@
+#!/bin/bash 
+#SBATCH -o H1233057.o%j 
+#SBATCH -e H1233057.e%j 
+#SBATCH -n 64
+#SBATCH -N 1
+#SBATCH -p AMD64
+#SBATCH -J H1233057N4L1
+
+cd /bigbang/data/AnnaGroup/caterpillar/halos/H1233057/H1233057_BB_Z127_P7_LN7_LX11_O4_NV4
+mkdir -p outputs
+cp ~/autorun/gadget_files/param_11.txt ./param.txt
+cp ~/autorun/gadget_files/P-Gadget3_256 ./P-Gadget3
+cp ~/autorun/gadget_files/ExpansionList_full ./ExpansionList
+mpirun -np 64 ./P-Gadget3 param.txt 1>OUTPUT 2>ERROR
+
+#cd /bigbang/data/AnnaGroup/caterpillar/halos/H1233057/H1233057_BB_Z127_P7_LN7_LX11_O4_NV4
+#mpirun -np 64 ./P-Gadget3 param.txt 1 1>>OUTPUT 2>>ERROR

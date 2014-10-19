@@ -4,10 +4,10 @@ from utils import *
 from optparse import OptionParser
 
 def submit_job(outpath,options):
-#    name = 'Nvmax'
-#    prog = "/spacebase/data/alexji/analysis/redshiftzero/calcVmax.py"
-    name = 'SHMF'
-    prog = "/spacebase/data/alexji/analysis/redshiftzero/calcSHMF.py"
+    name = 'Nvmax'
+    prog = "/spacebase/data/alexji/analysis/redshiftzero/calcVmax.py"
+#    name = 'SHMF'
+#    prog = "/spacebase/data/alexji/analysis/redshiftzero/calcSHMF.py"
 
     outfile = name+'.dat'
     runarg = outpath

@@ -10,9 +10,9 @@ from utils import *
 
 myemail="alexji@mit.edu"
 scriptpath="/home/alexji/autorun"
-#rockstarpath="/home/alexji/rockstar"
+rockstarpath="/home/alexji/rockstar"
 #rockstarpath="/home/alexji/Rockstar-Galaxies"
-rockstarpath="/home/alexji/Rockstar-0.99.9-RC3"
+#rockstarpath="/home/alexji/Rockstar-0.99.9-RC3"
 mergertreepath="/home/alexji/consistent_trees-0.99.9.2"
 
 def _find_force_res(outpath):
@@ -225,15 +225,15 @@ if __name__=="__main__":
     if (options.autoflag):
         if options.oldhalos:
             print "looking in oldhalos"
-            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False,
-                                           require_sorted=True)
+            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False)
+                                           #require_sorted=True)
         elif options.badics:
             print "looking in extremely_large_ics"
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",
-                                           require_sorted=True)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics")
+                                           #require_sorted=True)
         else:
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,
-                                           require_sorted=True)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+                                           #require_sorted=True)
         print "Total number of halo paths: ",len(halopathlist)
         #print [os.path.basename(os.path.normpath(outpath)) for outpath in halopathlist]
         currentjobs = get_currently_running_jobs()

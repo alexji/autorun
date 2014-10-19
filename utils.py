@@ -23,7 +23,7 @@ def get_short_name(filename):
     return haloid+ictype+"LX"+levelmax+"NV"+nrvir
 
 def find_halo_paths(lx,nv,
-                    ictype="BB",
+                    ictypelist=["BB","BE"],
                     contamsuite=False,
                     require_sorted=False,
                     require_rockstar=False,
@@ -45,7 +45,7 @@ def find_halo_paths(lx,nv,
 
     return haloutils.find_halo_paths(basepath=basepath,
                                      nrvirlist=nrvirlist,levellist=levellist,
-                                     ictype=ictype,verbose=verbose,hdf5=hdf5,
+                                     ictypelist=ictypelist,verbose=verbose,hdf5=hdf5,
                                      contamsuite=contamsuite,
                                      checkallblocks=checkallexist,
                                      require_sorted=require_sorted,
