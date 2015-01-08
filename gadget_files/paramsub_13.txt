@@ -21,7 +21,7 @@ ResubmitOn        0
 ResubmitCommand   my-scriptfile
 
 %----- Memory alloction
-MaxMemSize        3800      % sets maximum memory use in MByte
+MaxMemSize        1900      % sets maximum memory use in MByte
 PartAllocFactor   2.0 
 BufferSize        100       % in MByte
 

@@ -35,13 +35,28 @@ def rewrite(snap,basein,baseout,MASSFLAG=True):
     filenamein=basein+"snapdir_"+str(0).zfill(3)+"/"+"snap_"+str(0).zfill(3)
     filenameoutb=baseout+"/snapdir_"+str(snap).zfill(3)+"/"+"snap_"+str(snap).zfill(3)
 
-    f=hdf5lib.OpenFile(filenamein+'.0.hdf5')
     dblocks = ["ParticleIDs","Potential","Coordinates","Velocities"]
-    dtypes= [str(hdf5lib.GetData(f,'PartType1/'+block_name)[0:1].dtype) for block_name in \
-dblocks]
-    if MASSFLAG:
-        masstype = str(hdf5lib.GetData(f,'PartType5/Masses')[0:1].dtype)
-    f.close()
+    dtypes=None
+    if MASSFLAG: masstype=None
+    for i in range(64):
+        with hdf5lib.OpenFile(filenamein+'.'+str(i)+'.hdf5') as f:
+            if dtypes==None:
+                try:
+                    dtypes= [str(hdf5lib.GetData(f,'PartType1/'+block_name)[0:1].dtype) for block_name in dblocks]
+                except hdf5lib.tables.exceptions.NoSuchNodeError:
+                    #print 'skipping',i,'for parttype1'
+                    pass
+            if MASSFLAG:
+                if masstype==None:
+                    try:
+                        masstype = str(hdf5lib.GetData(f,'PartType5/Masses')[0:1].dtype)
+                    except hdf5lib.tables.exceptions.NoSuchNodeError:
+                        #print 'skipping',i,'for parttype5'
+                        pass
+            if (dtypes != None):
+                if MASSFLAG: 
+                    if masstype != None: break
+                else: break
 
     dtype = [("ID", dtypes[0]),
              ("POT",dtypes[1]),

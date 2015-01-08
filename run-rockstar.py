@@ -219,6 +219,8 @@ if __name__=="__main__":
     parser.add_option("--multimass",
                       action="store_true",dest="multimassflag",default=False,
                       help="flag to set multimass version (you still have to manually set the rockstar path in the source code)")
+    parser.add_option("--middle",
+                      action="store_true",dest="middle",default=False)
 
     (options,args) = parser.parse_args()
 
@@ -231,8 +233,12 @@ if __name__=="__main__":
             print "looking in extremely_large_ics"
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics")
                                            #require_sorted=True)
+        elif options.middle:
+            print "looking in middle_mass_halos"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/middle_mass_halos")
+                                           #require_sorted=True)
         else:
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True)
                                            #require_sorted=True)
         print "Total number of halo paths: ",len(halopathlist)
         #print [os.path.basename(os.path.normpath(outpath)) for outpath in halopathlist]

@@ -158,6 +158,8 @@ if __name__=="__main__":
     parser.add_option("--hsml",
                       action="store_true",dest="hsml",default=False,
                       help="use sorted HSML")
+    parser.add_option("--middle",
+                      action="store_true",dest="middle",default=False)
 
     (options,args) = parser.parse_args()
     if (options.autoflag):
@@ -170,6 +172,10 @@ if __name__=="__main__":
         elif options.badics:
             halopathlist = find_halo_paths(options.lx,options.nv,
                                            basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics",checkallexist=True)
+                                           #require_sorted=True)
+        elif options.middle:
+            halopathlist = find_halo_paths(options.lx,options.nv,
+                                           basepath="/bigbang/data/AnnaGroup/caterpillar/halos/middle_mass_halos",checkallexist=True)
                                            #require_sorted=True)
         else:
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)

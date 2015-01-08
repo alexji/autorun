@@ -23,7 +23,7 @@ def get_short_name(filename):
     return haloid+ictype+"LX"+levelmax+"NV"+nrvir
 
 def find_halo_paths(lx,nv,
-                    ictypelist=["BB","BE"],
+                    ictypelist=["BA","BB","BC","BD","EA","EB","EC","EX","CA","CB","CC"],
                     contamsuite=False,
                     require_sorted=False,
                     require_rockstar=False,
@@ -65,6 +65,24 @@ def get_currently_running_jobs(verbose=False):
         print currentjobs
     return currentjobs
 
+def filter_halo_paths(halopathlist,jobname_fn,checkdone_fn,forceflag):
+    currentjobs = get_currently_running_jobs()    
+    listtosubmit = list(halopathlist) #copy halopathlist
+    for hpath in halopathlist:
+        foldername = get_foldername(hpath)
+        jobname = jobname_fn(hpath)
+        foundjob = False
+        for currentjob in currentjobs:
+            if jobname in currentjob:
+                print "RUNNING: "+foldername+" is running on job "+currentjob
+                foundjob = True; listtosubmit.remove(hpath); break
+        if foundjob: break
+        done = checkdone_fn(hpath)
+        if done and not forceflag:
+            print "DONE: "+foldername
+            listtosubmit.remove(hpath)
+    return listtosubmit
+
 def get_numsnaps(outpath):
     return haloutils.get_numsnaps(outpath)
 def get_foldername(outpath):
@@ -77,6 +95,8 @@ def check_last_subfind_exists(outpath):
     return haloutils.check_last_subfind_exists(outpath)
 def check_last_rockstar_exists(outpath,fullbin=True,particles=False):
     return haloutils.check_last_rockstar_exists(outpath,fullbin=fullbin,particles=particles)
+def check_rockstar_exists(outpath,snap,fullbin=True,particles=False):
+    return haloutils.check_rockstar_exists(outpath,snap,fullbin=fullbin,particles=particles)
 def check_is_sorted(outpath,snap=0,hdf5=True):
     return haloutils.check_is_sorted(outpath,snap=snap,hdf5=hdf5)
 
@@ -97,8 +117,8 @@ def get_default_parser():
                       action="store",type="string",default="11",
                       help="comma separated list of LX values (default 11)")
     parser.add_option("--nv",
-                      action="store",type="string",default="4",
-                      help="comma separated list of NV values (default 4)")
+                      action="store",type="string",default="4,5",
+                      help="comma separated list of NV values (default 4,5)")
     parser.add_option("--oldhalos",action="store_true",dest="oldhalos",default=False)
     parser.add_option("--badics",action="store_true",dest="badics",default=False)
     return parser
