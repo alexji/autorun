@@ -33,6 +33,14 @@ def submit_one_job(outpath,jobname,snap,levelmax,pmgrid,options):
     elif options.amd64:
         f.write("#SBATCH -p AMD64\n") #partition
         CORES_PER_NODE=64
+    elif options.regshort:
+        f.write("#SBATCH -p RegShort\n")
+        f.write("#SBATCH -t 6-00:00:00\n")
+        CORES_PER_NODE=8
+    elif options.hypershort:
+        f.write("#SBATCH -p HyperShort\n")
+        f.write("#SBATCH -t 6-00:00:00\n")
+        CORES_PER_NODE=24
     else:
         f.write("#SBATCH -p HyperNodes\n") #partition
         CORES_PER_NODE=24
@@ -160,6 +168,10 @@ if __name__=="__main__":
                       help="use sorted HSML")
     parser.add_option("--middle",
                       action="store_true",dest="middle",default=False)
+    parser.add_option("--low",
+                      action="store_true",dest="low",default=False)
+    parser.add_option("--high",
+                      action="store_true",dest="high",default=False)
 
     (options,args) = parser.parse_args()
     if (options.autoflag):
@@ -177,6 +189,12 @@ if __name__=="__main__":
             halopathlist = find_halo_paths(options.lx,options.nv,
                                            basepath="/bigbang/data/AnnaGroup/caterpillar/halos/middle_mass_halos",checkallexist=True)
                                            #require_sorted=True)
+        elif options.low:
+            print "looking in low_mass_halos"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/low_mass_halos")
+        elif options.high:
+            print "looking in high_mass_halos"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/high_mass_halos")
         else:
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=False)
                                            #require_sorted=True)

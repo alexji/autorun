@@ -46,7 +46,7 @@ def generate_rockstar_cfg(f,outpath,jobname):
 
 def write_submission_script(outpath,jobname,options):
     assert 'LX11' in outpath #assumed for forceres
-    rockstarexe=rockstarpath+'/rockstar'
+    rockstarexe=rockstarpath+'/rockstarcontam'
     f = open(outpath+'/'+jobname+'.sbatch','w')
     f.write("#!/bin/sh\n")
     f.write("#SBATCH -J "+jobname+"\n") #jobname

@@ -93,10 +93,10 @@ def get_zoom_params(outpath):
     return haloutils.get_zoom_params(outpath)
 def check_last_subfind_exists(outpath):
     return haloutils.check_last_subfind_exists(outpath)
-def check_last_rockstar_exists(outpath,fullbin=True,particles=False):
-    return haloutils.check_last_rockstar_exists(outpath,fullbin=fullbin,particles=particles)
-def check_rockstar_exists(outpath,snap,fullbin=True,particles=False):
-    return haloutils.check_rockstar_exists(outpath,snap,fullbin=fullbin,particles=particles)
+def check_last_rockstar_exists(outpath,**kwargs):
+    return haloutils.check_last_rockstar_exists(outpath,**kwargs)
+def check_rockstar_exists(outpath,snap,**kwargs):
+    return haloutils.check_rockstar_exists(outpath,snap,**kwargs)
 def check_is_sorted(outpath,snap=0,hdf5=True):
     return haloutils.check_is_sorted(outpath,snap=snap,hdf5=hdf5)
 
@@ -110,6 +110,12 @@ def get_default_parser():
     parser.add_option("--RegNodes",
                       action="store_true",dest="regnodes",default=False,
                       help="submit to RegNodes instead of HyperNodes")
+    parser.add_option("--RegShort",
+                      action="store_true",dest="regshort",default=False,
+                      help="submit to RegShort instead of HyperNodes")
+    parser.add_option("--HyperShort",
+                      action="store_true",dest="hypershort",default=False,
+                      help="submit to HyperShort instead of HyperNodes")
     parser.add_option("--AMD64",
                       action="store_true",dest="amd64",default=False,
                       help="submit to AMD64 instead of HyperNodes")

@@ -34,122 +34,107 @@ def find_force_res(outpath):
     except IOError as e:
         print "------WARNING------"
         print e
-        ictype,lx,nv = utils.get_zoom_params(outpath)
+        ictype,lx,nv = get_zoom_params(outpath)
         #forceres = 100./2.^lx/40.
         forceres = 100./2.^lx/80.
     return forceres
 
-def generate_rockstar_cfg(f,outpath,jobname,startsnap,options):
-    ## Automatically generate a cfg file
-    f.write("# auto-generating rockstar cfg\n")
-
-    ## create cfg file
-    filename = outpath+"/halos/rockstar_autocfg_"+jobname+".cfg"
-    f.write("cat > "+filename+" <<EOF\n")
-    f.write("INBASE  = "+outpath+"/outputs\n")
-    f.write("OUTBASE = "+outpath+"/halos\n")
-    f.write("NUM_BLOCKS = ${NUMBLOCKS}\n")
-    f.write("NUM_WRITERS = "+options.numwriters+"\n")
-    f.write("NUM_SNAPS=${NUMSNAPS}\n")
-    f.write("STARTING_SNAP="+startsnap+"\n")
-
-    f.write("OUTPUT_FORMAT=\"BINARY\"\n")
-    f.write("PARALLEL_IO = 1\n")
-    f.write("FORK_READERS_FROM_WRITERS = 1\n")
-    forceres = find_force_res(outpath)
-    f.write("FORCE_RES = "+str(forceres)+"\n")
-    if options.oldhalos:
-        f.write("FILE_FORMAT = \"GADGET2\"\n")
-        f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>\n")
-    else:
-        f.write("FILE_FORMAT = \"AREPO\"\n") #hdf5 <=> arepo
-        f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>.hdf5\n")
-        f.write("AREPO_LENGTH_CONVERSION = 1.0\n") #hdf5 <=> arepo
-
-    f.write("MASS_DEFINITION=\"vir\"\n")
-
-    f.write("FULL_PARTICLE_BINARY = "+options.numwriters+"\n")
-    f.write("DELETE_BINARY_OUTPUT_AFTER_FINISHED = 1\n")
-    
-    f.write("EOF\n\n")
-
-    return filename
-
 def write_slurm_submission_script(outpath,jobname,rockstarcfg,options):
-    rockstarexe = rockstarpath+"/rockstar"
-    if options.multimassflag:
-        rockstarexe += "-galaxies"
-    if not os.path.exists(rockstarexe):
-        sys.exit("ERROR: "+rockstarexe+" does not exist (perhaps you need to add the --multimass flag?)")
+    label="bound"
+
     startsnap = str(options.startsnap)
     f = open(outpath+'/'+jobname+'.sbatch','w')
+
     f.write("#!/bin/sh\n")
-    f.write("#SBATCH -J "+jobname+"\n") #jobname
-    f.write("#SBATCH -o rockstar.o \n") #jobname
-    f.write("#SBATCH -e rockstar.e \n") #jobname
+    f.write("#SBATCH -J "+jobname+"\n")
+    f.write("#SBATCH -o rockstar.o\n")
+    f.write("#SBATCH -e rockstar.e\n")
     if options.regnodes: #partition
         f.write("#SBATCH -p RegNodes\n")
     elif options.amd64:
         f.write("#SBATCH -p AMD64\n")
+    elif options.regshort:
+        f.write("#SBATCH -p RegShort\n")
+        if options.nnodes > 1:
+            f.write("#SBATCH -t 3-00:00:00\n")
+        else:
+            f.write("#SBATCH -t 7-00:00:00\n")
+    elif options.hypershort:
+        f.write("#SBATCH -p HyperShort\n")
+        if options.nnodes > 1:
+            f.write("#SBATCH -t 3-00:00:00\n")
+        else:
+            f.write("#SBATCH -t 7-00:00:00\n")
     else:
         f.write("#SBATCH -p HyperNodes\n")
     f.write("#SBATCH -N "+options.nnodes+"\n") #minimum number of nodes
-    f.write("#SBATCH -t "+options.time+"\n") #time
-    #f.write("#SBATCH --mem="+options.mem+"\n") #memory
-    #f.write("#SBATCH --ntasks-per-node="+"\n")
-    f.write("#SBATCH --exclusive\n")
-
     f.write("\n")
-    f.write("#Rockstar path: "+rockstarpath+"\n")
+    f.write("LABEL="+label+"\n")
+    f.write("STARTSNAP="+startsnap+"\n")
     f.write("NUMSNAPS=`cat "+outpath+"/ExpansionList | wc -l`\n")
     f.write("NUMBLOCKS=`grep NumFilesPerSnapshot "+outpath+"/param.txt | awk '{print $2}'`\n")
     f.write("BOXSIZE=`grep BoxSize "+outpath+"/param.txt | awk '{print $2}'`\n")
-    f.write('echo "numsnaps: $NUMSNAPS"\n')
-    f.write('echo "numblocks: $NUMBLOCKS"\n')
-    f.write('echo "boxsize: $BOXSIZE"\n')
-    f.write('echo "tasks per node: $SLURM_TASKS_PER_NODE"\n')
-    f.write('echo "submit directory: $SLURM_SUBMIT_DIR"\n')
-    f.write('echo "start time" `/bin/date`\n')
+    f.write("OUTDIR=halos_${LABEL}\n")
+    f.write("HPATH="+outpath+"\n")
+    f.write("echo \"numsnaps: $NUMSNAPS\"\n")
+    f.write("echo \"numblocks: $NUMBLOCKS\"\n")
+    f.write("echo \"boxsize: $BOXSIZE\"\n")
+    f.write("echo \"tasks per node: $SLURM_TASKS_PER_NODE\"\n")
+    f.write("echo \"submit directory: $SLURM_SUBMIT_DIR\"\n")
+    f.write("echo \"start time\" `/bin/date`\n")
+    f.write("cd ${HPATH}\n")
+    if options.forceflag:
+        f.write("if [ -d ${HPATH}/${OUTDIR} ]; then \n")
+        f.write("    rm -rf ${HPATH}/${OUTDIR}\n")
+        f.write("fi\n\n")
+    else:
+        f.write("#if [ -d ${HPATH}/${OUTDIR} ]; then \n")
+        f.write("#    rm -rf ${HPATH}/${OUTDIR}\n")
+        f.write("#fi\n")
 
-    f.write("cd "+outpath+"\n")
-
-    if options.autoflag:
-        if options.forceflag:
-            f.write("if [ -d halos ]; then \n")
-            f.write("    rm -rf halos\n")
-            f.write("fi\n\n")
-        f.write("mkdir -p halos\n")
-        f.write('chmod -R g+rwx halos\n')
-        f.write("chgrp -R annaproj halos\n")
-        f.write("cd halos\n")
-        rockstarcfg = generate_rockstar_cfg(f,outpath,jobname,startsnap,options)
-        halopath = outpath+'/halos'
-    else: halopath = outpath
-
+    f.write("mkdir -p ${OUTDIR}\n")
+    f.write("chmod -R g+rwx ${OUTDIR}\n")
+    f.write("chgrp -R annaproj ${OUTDIR}\n")
+    f.write("cd ${OUTDIR}\n")
+    f.write("# auto-generating rockstar cfg\n")
+    f.write("cat > ${HPATH}/${OUTDIR}/rockstar_autocfg_${LABEL}.cfg <<EOF\n")
+    f.write("INBASE  = ${HPATH}/outputs\n")
+    f.write("OUTBASE = ${HPATH}/${OUTDIR}\n")
+    f.write("NUM_BLOCKS = ${NUMBLOCKS}\n")
+    f.write("NUM_WRITERS = "+options.numwriters+"\n")
+    f.write("NUM_SNAPS=${NUMSNAPS}\n")
+    f.write("STARTING_SNAP=${STARTSNAP}\n")
+    f.write("OUTPUT_FORMAT=\"BOTHBIN\"\n")
+    f.write("PARALLEL_IO = 1\n")
+    f.write("FORK_READERS_FROM_WRITERS = 1\n")
+    forceres = find_force_res(outpath)
+    f.write("FORCE_RES = "+str(forceres)+"\n")
+    f.write("FILE_FORMAT = \"AREPO\"\n")
+    f.write("FILENAME = snapdir_<snap>/snap_<snap>.<block>.hdf5\n")
+    f.write("AREPO_LENGTH_CONVERSION = 1.0\n")
+    f.write("MASS_DEFINITION=\"vir\"\n")
+    f.write("DELETE_BINARY_OUTPUT_AFTER_FINISHED = 1\n")
+    f.write("EOF\n")
+    f.write("\n")
     f.write("if [ -e auto-rockstar.cfg ]; then\n")
-    f.write("    rm auto-rockstar.cfg\n")
-    f.write("fi\n\n")
-    
-    f.write(rockstarexe+" -c "+rockstarcfg+" &\n")
+    f.write("rm auto-rockstar.cfg\n")
+    f.write("fi\n")
+    f.write("\n")
+    f.write(rockstarpath+"/rockstar${LABEL} -c ${HPATH}/${OUTDIR}/rockstar_autocfg_${LABEL}.cfg &\n")
+    f.write("#"+rockstarpath+"/rockstar${LABEL} -c ${HPATH}/${OUTDIR}/restart.cfg &\n")
     f.write("while [ ! -e auto-rockstar.cfg ]; do\n")
-    f.write("    sleep 1\n")
+    f.write("sleep 1\n")
     f.write("done\n")
+    f.write("srun -n "+options.numwriters+" "+rockstarpath+"/rockstar${LABEL} -c auto-rockstar.cfg\n")
+    f.write("echo \"halo catalogue stop time\" `/bin/date`\n")
+    f.write(scriptpath+"/postprocess-rockstar.sh "+rockstarpath+" ${HPATH}/${OUTDIR}/rockstar_autocfg_${LABEL}.cfg "+mergertreepath+" ${HPATH}/${OUTDIR} $NUMSNAPS $STARTSNAP $BOXSIZE\n")
+    f.write("cd ${HPATH}\n")
+    f.write("chgrp -R annaproj ${OUTDIR}\n")
+    f.write("chmod -R g+rwx ${OUTDIR}\n")
+    f.write("echo \"stop time\" `/bin/date`\n")
 
-    #f.write(". /opt/torque/etc/openmpi-setup.sh\n")
-    #f.write("mpirun "+rockstarexe+" -c auto-rockstar\n")
-    #f.write("mpirun -np "+str(options.numwriters)+" "+rockstarexe+" -c auto-rockstar\n")
-    f.write("srun -n "+str(options.numwriters)+" "+rockstarexe+" -c auto-rockstar.cfg\n")
-
-    f.write('echo "halo catalogue stop time" `/bin/date`\n')
-    ## postprocess rockstar: run merger tree, create folders
-    f.write(scriptpath+"/postprocess-rockstar.sh "+rockstarpath+" "
-            +rockstarcfg+" "+mergertreepath+" "+halopath+" $NUMSNAPS "+startsnap+" $BOXSIZE\n")
-    f.write("cd "+outpath+"\n")
-    f.write("chgrp -R annaproj halos\n")
-    f.write("chmod -R g+rwx halos\n")
-
-    f.write('echo "stop time" `/bin/date`\n')
     f.close()
+    rockstarcfg = outpath+'/halos_'+label+'/rockstar_autocfg_'+label+'.cfg'
     return rockstarcfg # name of the cfg file
 
 def submit_one_job(outpath,options,rockstarcfg,jobnum=0):
@@ -207,36 +192,31 @@ if __name__=="__main__":
     parser.add_option("-N","--nnodes",
                       action="store",type="string",dest="nnodes",default="1",
                       help="argument to sbatch --nnodes (-N) (default 1)")
-    parser.add_option("-t","--time",
-                      action="store",type="string",dest="time",default="infinite",
-                      help="argument to sbatch --time (-t) (default infinite)")
     parser.add_option("--autostartsnap",
                       action="store_true",dest="autostartsnap",default=False,
                       help="if specified, automatically detects the snap to start rockstar (overwrites what you put for --startsnap)")
     parser.add_option("-n","--num-jobs",
                       action="store",type="int",dest="numjobs",default=1,
                       help="number of jobs to submit (one per halo)")
-    parser.add_option("--multimass",
-                      action="store_true",dest="multimassflag",default=False,
-                      help="flag to set multimass version (you still have to manually set the rockstar path in the source code)")
     parser.add_option("--middle",
                       action="store_true",dest="middle",default=False)
+    parser.add_option("--low",
+                      action="store_true",dest="low",default=False)
+    parser.add_option("--high",
+                      action="store_true",dest="high",default=False)
 
     (options,args) = parser.parse_args()
 
     if (options.autoflag):
-        if options.oldhalos:
-            print "looking in oldhalos"
-            halopathlist = find_halo_paths(options.lx,options.nv,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/oldhalos",hdf5=False)
-                                           #require_sorted=True)
-        elif options.badics:
-            print "looking in extremely_large_ics"
-            halopathlist = find_halo_paths(options.lx,options.nv,verbose=False,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/extremely_large_ics")
-                                           #require_sorted=True)
-        elif options.middle:
+        if options.middle:
             print "looking in middle_mass_halos"
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/middle_mass_halos")
-                                           #require_sorted=True)
+        elif options.low:
+            print "looking in low_mass_halos"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/low_mass_halos")
+        elif options.high:
+            print "looking in high_mass_halos"
+            halopathlist = find_halo_paths(options.lx,options.nv,verbose=True,basepath="/bigbang/data/AnnaGroup/caterpillar/halos/high_mass_halos")
         else:
             halopathlist = find_halo_paths(options.lx,options.nv,verbose=True)
                                            #require_sorted=True)
@@ -258,7 +238,7 @@ if __name__=="__main__":
             numsnaps = 0
             for snap in xrange(totalnumsnaps):
                 snapstr = str(snap)
-                if os.path.exists(outpath+'/halos/halos_'+snapstr+'/halos_'+snapstr+'.0.fullbin'):
+                if check_rockstar_exists(outpath,snap):
                     numsnaps += 1
             if numsnaps == totalnumsnaps and not options.forceflag:
                 print "DONE Rockstar completed for "+os.path.basename(os.path.normpath(outpath))+", "+str(numsnaps)+" snaps"
